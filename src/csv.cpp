@@ -34,8 +34,8 @@ std::vector<Order> readCSV(const std::string csvPath){
 
 		// read side
 		std::getline(iss, word, ',');
-		if(word == "BUY"){order.side = OrderType::BIDS;}
-		else {order.side = OrderType::ASKS;}
+		if(word == "BUY"){order.side = OrderSide::BIDS;}
+		else {order.side = OrderSide::ASKS;}
 
 		// read price
 		std::getline(iss, word, ',');
@@ -64,7 +64,7 @@ void renderCSV(const std::vector<Order>& orders){
 		std::cout << std::left
 			<< std::setw(15) << order.timeStamp
 			<< std::setw(10) << order.id
-			<< std::setw(10) << (order.side == OrderType::BIDS ? "BUY" : "SELL")
+			<< std::setw(10) << (order.side == OrderSide::BIDS ? "BUY" : "SELL")
 			<< std::setw(10) << order.price
 			<< std::setw(10) << order.quantity << "\n";
 	}

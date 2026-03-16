@@ -1,9 +1,13 @@
 #pragma once
 
+#include <logger.hpp>
+
 #include <cstdint>
 #include <deque>
+#include <queue>
+#include <mutex>
 
-enum class OrderType {
+enum class OrderSide {
 	BIDS=0, ASKS
 };
 
@@ -12,7 +16,7 @@ struct Order{
 	uint64_t price;
 	uint64_t quantity;
 	uint64_t timeStamp;
-	OrderType side;
+	OrderSide side;
 };
 
 struct PriceLevel{
@@ -27,4 +31,4 @@ struct OrderBook{
 	std::vector<PriceLevel> asks;
 };
 
-void addOrder(OrderBook& book, Order order);
+void addOrder(OrderBook& book, Order order, std::queue<TradeEvent>& q, std::mutex& mtx);
