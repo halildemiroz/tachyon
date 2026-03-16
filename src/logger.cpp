@@ -2,7 +2,7 @@
 
 void Logger(std::queue<TradeEvent>& tradeQueue, std::mutex& queueMutex){
 
-	std::ofstream aofFile("../engine.aof", std::ios::app);
+	std::ofstream aofFile("../engine.aof", std::ios::app | std::ios::binary);
 
 	while(1){
 		TradeEvent event;
@@ -20,7 +20,9 @@ void Logger(std::queue<TradeEvent>& tradeQueue, std::mutex& queueMutex){
 			if(event.quantity == 0)
 				break;
 
-			aofFile << event.timeStamp << "," << event.buyerID << "," << event.sellerID << "," << event.price << "," << event.quantity << "\n";
+			aofFile.write(reinterpret_cast<const char*>(&event), sizeof(TradeEvent));
+
+			// aofFile << event.timeStamp << "," << event.buyerID << "," << event.sellerID << "," << event.price << "," << event.quantity << "\n";
 
 			// std::cout << "TRADE: " << event.quantity << " units @ " << event.price << "\n";
 		}

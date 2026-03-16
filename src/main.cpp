@@ -8,28 +8,7 @@
 #include <iostream>
 
 
-
-void makeTrade(std::queue<TradeEvent>& tradeQueue, std::mutex& queueMutex){
-	std::vector<Order> rawOrders = readCSV("./../stressTest.csv");
-	
-	OrderBook book;
-
-	for(const auto& incomingOrders : rawOrders){
-		addOrder(book, incomingOrders, tradeQueue, queueMutex);
-	}
-
-	TradeEvent poisonPill;
-	poisonPill.quantity = 0;
-
-	{
-		std::lock_guard<std::mutex> lock(queueMutex);
-		tradeQueue.push(poisonPill);
-	}
-
-}
-
 int main(){
-
 	std::queue<TradeEvent> tradeQueue;
 	std::mutex queueMutex;
 	

@@ -134,3 +134,22 @@ void addOrder(OrderBook& book, Order order, std::queue<TradeEvent>& q, std::mute
 		}
 	}
 }
+
+void makeTrade(std::queue<TradeEvent>& tradeQueue, std::mutex& queueMutex){
+	std::vector<Order> rawOrders = readCSV("../massive_book.csv");
+	
+	OrderBook book;
+
+	for(const auto& incomingOrders : rawOrders){
+		addOrder(book, incomingOrders, tradeQueue, queueMutex);
+	}
+
+	TradeEvent poisonPill;
+	poisonPill.quantity = 0;
+
+	{
+		std::lock_guard<std::mutex> lock(queueMutex);
+		tradeQueue.push(poisonPill);
+	}
+
+}

@@ -32,3 +32,6 @@ struct OrderBook{
 };
 
 void addOrder(OrderBook& book, Order order, std::queue<TradeEvent>& q, std::mutex& mtx);
+
+void makeTrade(std::queue<TradeEvent>& tradeQueue, std::mutex& queueMutex);
+
