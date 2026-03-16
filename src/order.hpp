@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <deque>
 #include <queue>
+#include <mutex>
 
 enum class OrderSide {
 	BIDS=0, ASKS
