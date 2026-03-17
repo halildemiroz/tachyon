@@ -9,15 +9,17 @@
 
 int main(){
     
-    auto tradeQueue = std::make_unique<LockFreeQueue>();
+    auto tradeQueue = std::make_unique<LockFreeQueue<TradeEvent>>();
+    auto orderQueue = std::make_unique<LockFreeQueue<Order>>();
+
     std::vector<Order> rawOrders = readCSV("../massive_book.csv"); 
     
     auto start = std::chrono::high_resolution_clock::now();
 
     {
-        std::jthread t1(makeTrade, std::ref(*tradeQueue), std::ref(rawOrders));
-        std::jthread t2(Logger, std::ref(*tradeQueue));
-        
+        std::jthread t1(makeTrade, std::ref(*tradeQueue), std::ref(*orderQueue), std::ref(rawOrders));
+        std::jthread t2(orderLogger, std::ref(*orderQueue));
+        std::jthread t3(tradeLogger, std::ref(*tradeQueue));
     }
 
     auto end = std::chrono::high_resolution_clock::now();

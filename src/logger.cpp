@@ -1,9 +1,7 @@
 #include <logger.hpp>
 
-#include <ringBuffer.hpp>
-
-void Logger(LockFreeQueue& tradeQueue){
-	std::ofstream aofFile("../engine.aof", std::ios::app | std::ios::binary);
+void tradeLogger(LockFreeQueue<TradeEvent>& tradeQueue){
+	std::ofstream aofFile("../trade_ledger.aof", std::ios::app | std::ios::binary);
 	
 	while(1){
 		TradeEvent event;
@@ -13,6 +11,20 @@ void Logger(LockFreeQueue& tradeQueue){
 				break;
 
 			aofFile.write(reinterpret_cast<const char*>(&event), sizeof(TradeEvent));
+		}
+	}
+	aofFile.close();
+}
+
+void orderLogger(LockFreeQueue<Order>& orderQueue){
+	std::ofstream aofFile("../order_book.aof", std::ios::app | std::ios::binary);
+	
+	while(1){
+		Order order;
+		if(orderQueue.pop(order)){
+			if(order.quantity == 0)
+				break;
+			aofFile.write(reinterpret_cast<const char*>(&order), sizeof(Order));
 		}
 	}
 	aofFile.close();

@@ -1,17 +1,8 @@
 #pragma once
 
-#include <cstdint>
+#include <ringBuffer.hpp>
+#include <order.hpp>
 #include <fstream>
 
-class LockFreeQueue;
-
-struct TradeEvent{
-	uint64_t timeStamp;
-	uint64_t buyerID;
-	uint64_t sellerID;
-	uint64_t price;
-	uint64_t quantity;
-};
-
-void Logger(LockFreeQueue& tradeQueue);
-
+void tradeLogger(LockFreeQueue<TradeEvent>& tradeQueue);
+void orderLogger(LockFreeQueue<Order>& orderQueue);

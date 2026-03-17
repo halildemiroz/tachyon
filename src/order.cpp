@@ -4,7 +4,7 @@
 #include <order.hpp>
 #include <csv.hpp>
 
-void addOrder(OrderBook& book, Order order, LockFreeQueue& tradeQueue){
+void addOrder(OrderBook& book, Order order, LockFreeQueue<TradeEvent>& tradeQueue){
 	int orderIndex = priceToIndex(order.price);
 
 	if(order.side == OrderSide::BIDS){
@@ -79,16 +79,18 @@ void addOrder(OrderBook& book, Order order, LockFreeQueue& tradeQueue){
 	}
 }
 
-void makeTrade(LockFreeQueue& tradeQueue, const std::vector<Order>& rawOrders){
+void makeTrade(LockFreeQueue<TradeEvent>& tradeQueue, LockFreeQueue<Order>& orderQueue, const std::vector<Order>& rawOrders){
 	OrderBook book;
 
 	for(const auto& incomingOrders : rawOrders){
+		while(!orderQueue.push(incomingOrders)){}
 		addOrder(book, incomingOrders, tradeQueue);
 	}
 
-	TradeEvent poisonPill;
-	poisonPill.quantity = 0;
+	Order poisonOrder; poisonOrder.quantity = 0;
+	while(!orderQueue.push(poisonOrder)){}
 
-	while(!tradeQueue.push(poisonPill)){}
+	TradeEvent poisonTrade; poisonTrade.quantity = 0;
+	while(!tradeQueue.push(poisonTrade)){}
 
 }
