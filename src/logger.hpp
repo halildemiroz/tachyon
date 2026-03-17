@@ -1,10 +1,9 @@
 #pragma once
 
 #include <cstdint>
-#include <queue>
-#include <iostream>
-#include <mutex>
 #include <fstream>
+
+class LockFreeQueue;
 
 struct TradeEvent{
 	uint64_t timeStamp;
@@ -14,5 +13,5 @@ struct TradeEvent{
 	uint64_t quantity;
 };
 
-void Logger(std::queue<TradeEvent>& tradeQueue, std::mutex& queueMutex);
+void Logger(LockFreeQueue& tradeQueue);
 

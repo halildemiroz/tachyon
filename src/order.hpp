@@ -1,11 +1,9 @@
 #pragma once
 
-#include <logger.hpp>
+#include <ringBuffer.hpp>
 
 #include <cstdint>
 #include <deque>
-#include <queue>
-#include <mutex>
 
 enum class OrderSide {
 	BIDS=0, ASKS
@@ -31,7 +29,7 @@ struct OrderBook{
 	std::vector<PriceLevel> asks;
 };
 
-void addOrder(OrderBook& book, Order order, std::queue<TradeEvent>& q, std::mutex& mtx);
+void addOrder(OrderBook& book, Order order, LockFreeQueue& tradeQueue);
 
-void makeTrade(std::queue<TradeEvent>& tradeQueue, std::mutex& queueMutex);
+void makeTrade(LockFreeQueue& tradeQueue, const std::vector<Order>& rawOrders);
 

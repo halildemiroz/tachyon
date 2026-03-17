@@ -1,19 +1,18 @@
+#include "ringBuffer.hpp"
 #include <logger.hpp>
 #include <csv.hpp>
-#include <mutex>
+#include <memory>
 #include <order.hpp>
 
 #include <thread>
-#include <queue>
-#include <iostream>
-
 
 int main(){
-	std::queue<TradeEvent> tradeQueue;
-	std::mutex queueMutex;
 	
-	std::jthread t1(makeTrade, std::ref(tradeQueue), std::ref(queueMutex));
-	std::jthread t2(Logger, std::ref(tradeQueue), std::ref(queueMutex));
+	auto tradeQueue = std::make_unique<LockFreeQueue>();
+	std::vector<Order> rawOrders = readCSV("../massive_book.csv");
+	
+	std::jthread t1(makeTrade, std::ref(*tradeQueue), std::ref(rawOrders));
+	std::jthread t2(Logger, std::ref(*tradeQueue));
 
 	return 0;
 }

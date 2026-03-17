@@ -1,11 +1,10 @@
+#include "ringBuffer.hpp"
 #include <algorithm>
 #include <cstdint>
-#include <mutex>
 #include <order.hpp>
 #include <csv.hpp>
-#include <iostream>
 
-void addOrder(OrderBook& book, Order order, std::queue<TradeEvent>& q, std::mutex& mtx){
+void addOrder(OrderBook& book, Order order, LockFreeQueue& tradeQueue){
 	if(order.side == OrderSide::BIDS){
 		while(!book.asks.empty() && order.quantity > 0){
 			PriceLevel& bestAskLevel = book.asks.front();
@@ -18,7 +17,6 @@ void addOrder(OrderBook& book, Order order, std::queue<TradeEvent>& q, std::mute
 				
 				if(order.quantity >= restingAsk.quantity){
 					order.quantity -= restingAsk.quantity;
-					std::cout << "TRADE: " << restingAsk.quantity << " units @ "  << bestAskLevel.price << "\n";
 				
 					// AOF
 					TradeEvent trade;
@@ -28,16 +26,14 @@ void addOrder(OrderBook& book, Order order, std::queue<TradeEvent>& q, std::mute
 					trade.price = bestAskLevel.price;
 					trade.quantity = restingAsk.quantity;
 
-					{
-						std::lock_guard<std::mutex> lock(mtx);
-						q.push(trade);
+					while(!tradeQueue.push(trade)){
+
 					}
 					
 					bestAskLevel.orders.pop_front();
 
 				}else{
 					restingAsk.quantity -= order.quantity;
-					std::cout << "TRADE: " << order.quantity << " units @ " << bestAskLevel.price << "\n";
 
 					// AOF
 					TradeEvent trade;
@@ -46,10 +42,9 @@ void addOrder(OrderBook& book, Order order, std::queue<TradeEvent>& q, std::mute
 					trade.sellerID = restingAsk.id;
 					trade.price = bestAskLevel.price;
 					trade.quantity = order.quantity;
-					
-					{
-						std::lock_guard<std::mutex> lock(mtx);
-						q.push(trade);
+						
+					while(!tradeQueue.push(trade)){
+
 					}
 
 					order.quantity = 0;
@@ -73,7 +68,6 @@ void addOrder(OrderBook& book, Order order, std::queue<TradeEvent>& q, std::mute
 
                 if (order.quantity >= restingBid.quantity) {
                     order.quantity -= restingBid.quantity;
-                    std::cout << "TRADE: " << restingBid.quantity << " units @ " << bestBidLevel.price << "\n";
 	
 										TradeEvent trade;
 										trade.timeStamp = order.timeStamp;
@@ -82,16 +76,14 @@ void addOrder(OrderBook& book, Order order, std::queue<TradeEvent>& q, std::mute
 										trade.price = bestBidLevel.price;
 										trade.quantity = restingBid.quantity;
 
-										{
-											std::lock_guard<std::mutex> lock(mtx);
-											q.push(trade);
+										while(!tradeQueue.push(trade)){
+
 										}
 
 										bestBidLevel.orders.pop_front();
 
                 } else {
                     restingBid.quantity -= order.quantity;
-                    std::cout << "TRADE: " << order.quantity << " units @ " << bestBidLevel.price << "\n";
                     
 										TradeEvent trade;
 										trade.timeStamp = order.timeStamp;
@@ -99,11 +91,8 @@ void addOrder(OrderBook& book, Order order, std::queue<TradeEvent>& q, std::mute
 										trade.sellerID = order.id;
 										trade.price = bestBidLevel.price;
 										trade.quantity = order.quantity;
-
-										{
-											std::lock_guard<std::mutex> lock(mtx);
-											q.push(trade);
-										}
+										
+										while(!tradeQueue.push(trade)){}
 
 										order.quantity = 0;
                     break;
@@ -135,21 +124,17 @@ void addOrder(OrderBook& book, Order order, std::queue<TradeEvent>& q, std::mute
 	}
 }
 
-void makeTrade(std::queue<TradeEvent>& tradeQueue, std::mutex& queueMutex){
-	std::vector<Order> rawOrders = readCSV("../massive_book.csv");
+void makeTrade(LockFreeQueue& tradeQueue, const std::vector<Order>& rawOrders){
 	
 	OrderBook book;
 
 	for(const auto& incomingOrders : rawOrders){
-		addOrder(book, incomingOrders, tradeQueue, queueMutex);
+		addOrder(book, incomingOrders, tradeQueue);
 	}
 
 	TradeEvent poisonPill;
 	poisonPill.quantity = 0;
 
-	{
-		std::lock_guard<std::mutex> lock(queueMutex);
-		tradeQueue.push(poisonPill);
-	}
+	while(!tradeQueue.push(poisonPill)){}
 
 }
