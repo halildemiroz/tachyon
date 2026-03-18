@@ -1,7 +1,7 @@
 #include <logger.hpp>
 
 void tradeLogger(LockFreeQueue<TradeEvent>& tradeQueue){
-	std::ofstream aofFile("../trade_ledger.aof", std::ios::app | std::ios::binary);
+	std::ofstream aofFile("../trade_ledger.aof", std::ios::trunc | std::ios::binary);
 	
 	while(1){
 		TradeEvent event;
@@ -17,7 +17,7 @@ void tradeLogger(LockFreeQueue<TradeEvent>& tradeQueue){
 }
 
 void orderLogger(LockFreeQueue<Order>& orderQueue){
-	std::ofstream aofFile("../order_book.aof", std::ios::app | std::ios::binary);
+	std::ofstream aofFile("../order_book.aof", std::ios::trunc | std::ios::binary);
 	
 	while(1){
 		Order order;
