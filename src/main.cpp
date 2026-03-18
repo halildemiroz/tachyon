@@ -7,6 +7,8 @@
 #include <thread>
 
 int main(){
+
+	OrderBook activeBook = recoverOrderBook();
 	
 	auto tradeQueue = std::make_unique<LockFreeQueue<TradeEvent>>();
 	auto orderQueue = std::make_unique<LockFreeQueue<Order>>();
