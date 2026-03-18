@@ -3,8 +3,10 @@
 #include <cstdint>
 #include <order.hpp>
 #include <csv.hpp>
+#include <fstream>
+#include <iostream>
 
-void addOrder(OrderBook& book, Order order, LockFreeQueue<TradeEvent>& tradeQueue){
+void addOrder(OrderBook& book, Order order, LockFreeQueue<TradeEvent>& tradeQueue, bool isRecovery){
 	int orderIndex = priceToIndex(order.price);
 
 	if(order.side == OrderSide::BIDS){
@@ -31,7 +33,8 @@ void addOrder(OrderBook& book, Order order, LockFreeQueue<TradeEvent>& tradeQueu
 			trade.price = restingAsk.price;
 			trade.quantity = tradeQuantity;
 
-			while(!tradeQueue.push(trade)){}
+			if(!isRecovery)
+				while(!tradeQueue.push(trade)){}
 
 			if(restingAsk.quantity == 0)
 				book.asks[book.bestAskIndex].orders.pop_front();
@@ -94,3 +97,28 @@ void makeTrade(LockFreeQueue<TradeEvent>& tradeQueue, LockFreeQueue<Order>& orde
 	while(!tradeQueue.push(poisonTrade)){}
 
 }
+
+OrderBook recoverOrderBook(){
+	OrderBook book;
+	std::ifstream file("../order_book.aof", std::ios::binary);
+
+	if(!file.is_open()){
+		std::cout << "Could not find order_book.aof";
+		return book;
+	}
+
+	Order order;
+	uint64_t recoveredCount = 0;
+	LockFreeQueue<TradeEvent> dummyQueue;
+	
+	while(file.read(reinterpret_cast<char*>(&order), sizeof(Order))){
+		if(order.quantity > 0){
+			addOrder(book, order, dummyQueue, true);
+			recoveredCount++;
+		}
+	}
+	file.close();
+
+	return book;
+}
+

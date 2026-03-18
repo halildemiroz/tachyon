@@ -50,6 +50,7 @@ struct OrderBook{
 	int bestAskIndex = NUM_PRICE_LEVELS;
 };
 
-void addOrder(OrderBook& book, Order order, LockFreeQueue<TradeEvent>& tradeQueue);
+void addOrder(OrderBook& book, Order order, LockFreeQueue<TradeEvent>& tradeQueue, bool isRecovery = false);
 void makeTrade(LockFreeQueue<TradeEvent>& tradeQueue, LockFreeQueue<Order>& orderQueue, const std::vector<Order>& rawOrders);
+OrderBook recoverOrderBook();
 
